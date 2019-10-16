@@ -1,4 +1,7 @@
 const mongoose = require('mongoose');
+const bcrypt = require('bcrypt');
+
+const SALT = 10;
 
 const UserSchema = new mongoose.Schema({
 	name: {
@@ -24,5 +27,18 @@ const UserSchema = new mongoose.Schema({
 		required: [ true, "Can't be blank!" ]
 	},
 });
+
+UserSchema.pre('save', function(next) {
+	let user = this;
+
+	if(!user.isModified('password')) return next();
+
+	bcrypt.hash(user.password, SALT, (err, hash) => {
+		if(err) return next(err);
+
+		user.password = hash;
+		next();
+	})
+})
 
 module.exports = mongoose.model('users', UserSchema);
